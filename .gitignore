@@ -1,3 +1,5 @@
 debian/quenb-client
 debian/*.log
 debian/{files,docs}
+debian/source
+debian/stamp-makefile-build
