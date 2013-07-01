@@ -1,0 +1,154 @@
+#!/usr/bin/env python
+
+"""
+Auto-configurator for Quenb client. Creates the client config file; all options can
+be overridden using command-line arguments, but will be autoconfigured by default.
+We just need the URL of the Quenb control server to work it all out.
+"""
+
+from urlparse import urlparse
+import os, errno
+import socket
+import subprocess
+import re
+from ConfigParser import ConfigParser, NoOptionError
+import argparse
+import time
+import shlex
+
+def getMacFromURL(url):
+    """
+    Given the URL of the master server, gets the MAC address
+    of the network interface that will be used to contact it.
+    """
+
+    # Parse the URL...
+    parsed = urlparse(url)
+    port = parsed.port
+    hostname = parsed.netloc
+    scheme = parsed.scheme
+    ip = None
+    device = None
+    mac = None
+    
+    # ...retrieve the hostname and port...
+    
+    # Default to port 443 for https, or 80 for http/anything else
+    if not port:
+        if scheme == 'https':
+            port = 443
+        else:
+            port = 80
+    
+    
+    # Get address info for the hostname/port combo
+    info = socket.getaddrinfo(hostname, port, 0, 0, socket.SOL_TCP)
+    
+    # A bit fiddly. We get one or more tuples; [0][4][0] is the IP address (v4 or v6)
+    # of the first entry, which is (should be?) the one we'll connect to
+    ip = info[0][4][0]
+    
+    # Now we have the address, we can find the network interface using the ip command
+    p = subprocess.Popen(["ip", "route", "list", "match", str(ip)], stdout=subprocess.PIPE)
+    out, err = p.communicate()
+    
+    m = re.search(r'^.*\s+dev\s+(\S+)\s*$', out.split('\n')[0])
+    if m:
+        device = m.group(1)
+    
+    if device:
+        with open('/sys/class/net/%s/address' %(device)) as f:
+            mac = f.read()
+
+    return mac
+
+def runClient(browser_cmd):
+    """
+    Runs the client browser as a subprocess.
+    """
+    devnull = open(os.devnull, 'w')
+    return subprocess.Popen(shlex.split(browser_cmd), shell=False, stdout=devnull, stderr=devnull)
+
+
+# Read command line arguments
+argparser = argparse.ArgumentParser()
+
+argparser.add_argument('--config-file', dest='config_file', default='/etc/quenb/quenb-client.conf',
+                   help='Configuration file to write/create')
+argparser.add_argument('--control-url', dest='control_server_url', default=None,
+                   help='URL of the Quenb control server (__MAC__ is replaced with our MAC address)')
+argparser.add_argument('--mac-address', dest='mac', default=None,
+                   help='MAC address to report to the server (overrides auto-discovered value)')
+argparser.add_argument('--browser-command', dest='browser_command', default=None,
+                   help='Command to run a standalone web browser (__URL__ is replaced with the URL)')
+argparser.add_argument('--write-config', dest='write_config', action='store_true',
+                   help='Just writes all options to the config file and exits, does not run the client')
+
+args = argparser.parse_args()
+
+
+
+# Read configuration, if it exists
+config = ConfigParser()
+config.read(args.config_file)
+
+# If we don't have a client section, add one
+if not config.has_section('QuenbClient'):
+    config.add_section('QuenbClient')
+
+# Pull out all config values if they exist
+try:
+    url = config.get('QuenbClient', 'control-server-url')
+except NoOptionError: pass
+
+try:
+    browser = config.get('QuenbClient', 'browser-command')
+except NoOptionError: pass
+
+# Override with command line args if specified
+if args.control_server_url:
+    url = args.control_server_url
+
+if args.browser_command:
+    browser = args.browser_command
+
+if args.mac:
+    mac = args.mac
+else:
+    mac = getMacFromURL(url)
+
+
+# Clean whitespace from the ends
+mac = mac.strip()
+browser = browser.strip()
+url = url.strip()
+
+if args.write_config:
+    # Set the config values ready to write back
+    config.set('QuenbClient', 'control-server-url', url)
+    config.set('QuenbClient', 'browser-command', browser)
+    
+    # Write config file, creating it if needed
+    config_dir = os.path.abspath(os.path.dirname(args.config_file))
+    try:
+        os.makedirs(config_dir)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(config_dir):
+          pass
+        else: raise
+    
+    with open(args.config_file, 'wb') as configfile:
+        config.write(configfile)
+
+# Full client run
+else:
+
+    url = url.replace('__MAC__', mac)
+    browser = browser.replace('__URL__', url)
+
+    b = runClient(browser)
+    while True:
+        res = b.poll()
+        if res is not None:
+            b = runClient(browser)
+        time.sleep(5)
