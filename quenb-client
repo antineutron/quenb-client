@@ -83,6 +83,8 @@ argparser.add_argument('--browser-command', dest='browser_command', default=None
                    help='Command to run a standalone web browser (__URL__ is replaced with the URL)')
 argparser.add_argument('--write-config', dest='write_config', action='store_true',
                    help='Just writes all options to the config file and exits, does not run the client')
+argparser.add_argument('--install-on-boot', dest='install', action='store_true',
+                   help='Configures the system to boot straight into QuenB client (requires LXDE, assumes Raspberry Pi default config)')
 
 args = argparser.parse_args()
 
@@ -123,7 +125,36 @@ mac = mac.strip()
 browser = browser.strip()
 url = url.strip()
 
-if args.write_config:
+if args.install:
+    # Foo
+    if not os.path.isdir('/etc/xdg/lxsession/LXDE'):
+        print "Error: Directory '/etc/xdg/lxsession/LXDE' does not exist"
+        print "(is LXDE installed correctly?)"
+        exit(1)
+
+    if not os.path.isfile('/usr/share/quenb/quenb-lxde-autostart.conf'):
+        print "Error: Could not find '/usr/share/quenb/quenb-lxde-autostart.conf'"
+        print "(is QuenB Client installed correctly?)"
+        exit(1)
+
+    if os.path.exists('/etc/xdg/lxsession/LXDE/autostart'):
+        print "Moving existing LXDE autostart config out of the way..."
+        try:
+            os.rename('/etc/xdg/lxsession/LXDE/autostart', '/etc/xdg/lxsession/LXDE/autostart.quenb-client.orig')
+        except:
+            print "Could not rename /etc/xdg/lxsession/LXDE/autostart to /etc/xdg/lxsession/LXDE/autostart.quenb-client.orig - are you root?"
+            exit(1)
+
+        print "Linking autostart config..."
+        try:
+            os.symlink('/usr/share/quenb/quenb-lxde-autostart.conf', '/etc/xdg/lxsession/LXDE/autostart')
+        except:
+            print "Could not symlink /etc/xdg/lxsession/LXDE/autostart from /usr/share/quenb/quenb-lxde-autostart.conf - are you root?"
+            exit(1)
+
+        print "...done."
+
+elif args.write_config:
     # Set the config values ready to write back
     config.set('QuenbClient', 'control-server-url', url)
     config.set('QuenbClient', 'browser-command', browser)
