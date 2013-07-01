@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+
+# Always include this - it's the standard debhelper macro
+# stuff which means we have very little to do
+include /usr/share/cdbs/1/rules/debhelper.mk
+
+# Our software is based on a non-autotools-based makefile
+# so we need this package.
+include /usr/share/cdbs/1/class/makefile.mk
+
+
+# Add here any variable or target overrides you need.
+
+# We need to specify the various targets.  If this was autotools-based,
+# we'd have a standard make clean, ./configure, make, make test, make install
+# procedure so this would all be set up by default.
+DEB_MAKE_CLEAN_TARGET   = clean
+DEB_MAKE_BUILD_TARGET   = all
+
+# After the install target has run, it expects the installed software
+# to end up in </some/temp/dir>/debian/<package name> - I did
+# see in the docs that it's expecting debian/tmp/ but this is a FILTHY LIE.
+# DESTDIR should be fairly standard, but the makefile must be written
+# to actually make use of it!
+DEB_MAKE_INSTALL_TARGET = install DESTDIR=$(CURDIR)/debian/quenb-client
+
+# We don't have a "make check" target
+DEB_MAKE_CHECK_TARGET   =
+

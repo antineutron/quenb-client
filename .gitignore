@@ -1,0 +1,3 @@
+debian/quenb-client
+debian/*.log
+debian/{files,docs}

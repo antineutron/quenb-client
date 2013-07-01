@@ -1,0 +1,17 @@
+Source: quenb-client
+Section: admin
+Priority: extra
+Maintainer: ECS STACS (Student Teaching and Computing Support) <stacs@ecs.soton.ac.uk>
+Build-Depends: cdbs, debhelper (>= 7.0.50~)
+Standards-Version: 3.9.3
+
+Package: quenb-client
+Architecture: all
+Depends: python, midori, x11-xserver-utils, unclutter, host, ${shlibs:Depends}, ${misc:Depends}
+Suggests: chromium
+Description: QuenB digital signage - client
+ This package contains the client-side tools for the QuenB digital
+ signage system, developed by Jack Edge for the University of
+ Southampton. It is designed to be run on a Raspberry Pi
+ (http://www.raspberrypi.org), but this is not necessarily
+ a requirement.

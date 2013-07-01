@@ -1,0 +1,12 @@
+quenb-client (1.0.1) precise; urgency=low
+
+  * Add another version to shut lintian up. That's how we roll.
+
+ -- ECS STACS <stacs@ecs.soton.ac.uk>  Mon, 01 Jul 2013 13:48:21 +0100
+
+quenb-client (1.0.0) maverick; urgency=low
+
+  * Initial Release.
+
+ -- ECS STACS (Student Teaching and Computing Support) <stacs@ecs.soton.ac.uk>  Fri, 28 Jun 2013 15:07:43 +0000
+
