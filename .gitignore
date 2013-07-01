@@ -2,4 +2,7 @@ debian/quenb-client
 debian/*.log
 debian/{files,docs}
 debian/source
+debian/files
+debian/quenb-client.substvars
+debian/stamp-makefile-install
 debian/stamp-makefile-build
