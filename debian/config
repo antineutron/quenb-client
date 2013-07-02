@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+db_input medium quenb-client control-server-url || true
+db_input low quenb-client install-on-boot || true
+db_go || true
+
+
