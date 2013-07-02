@@ -1,3 +1,9 @@
+quenb-client (1.0.2) precise; urgency=low
+
+  * Added feature for configuring LXDE to autostart QuenB
+
+ -- ECS STACS <stacs@ecs.soton.ac.uk>  Mon, 01 Jul 2013 17:22:39 +0100
+
 quenb-client (1.0.1) precise; urgency=low
 
   * Add another version to shut lintian up. That's how we roll.
