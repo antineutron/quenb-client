@@ -16,6 +16,9 @@ import argparse
 import time
 import shlex
 
+# Current QuenB client version
+__version = '1.0.4'
+
 def getMacFromURL(url):
     """
     Given the URL of the master server, gets the MAC address
@@ -85,9 +88,15 @@ argparser.add_argument('--write-config', dest='write_config', action='store_true
                    help='Just writes all options to the config file and exits, does not run the client')
 argparser.add_argument('--install-on-boot', dest='install', action='store_true',
                    help='Configures the system to boot straight into QuenB client (requires LXDE, assumes Raspberry Pi default config)')
+argparser.add_argument('--version', dest='version', action='store_true',
+                   help='Prints version information and exits')
 
 args = argparser.parse_args()
 
+# --version support
+if args.version:
+    print __version
+    exit(0)
 
 
 # Read configuration, if it exists

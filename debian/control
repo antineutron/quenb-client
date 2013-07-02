@@ -7,7 +7,7 @@ Standards-Version: 3.9.3
 
 Package: quenb-client
 Architecture: all
-Depends: python, midori, x11-xserver-utils, unclutter, host, ${shlibs:Depends}, ${misc:Depends}
+Depends: debconf, python, lxde, midori, x11-xserver-utils, unclutter, host, ${shlibs:Depends}, ${misc:Depends}
 Suggests: chromium
 Description: QuenB digital signage - client
  This package contains the client-side tools for the QuenB digital

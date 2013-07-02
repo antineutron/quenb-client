@@ -7,19 +7,28 @@ clean:
 
 	@exit 0;
 
-install:
+install: manpage
 
 	mkdir -p $(DESTDIR)/usr/share/quenb/
+	mkdir -p $(DESTDIR)/usr/share/man/man1
 	mkdir -p $(DESTDIR)/usr/bin
 	mkdir -p $(DESTDIR)/etc/quenb;
 	cp quenb-client $(DESTDIR)/usr/bin/
 	cp quenb-client.conf $(DESTDIR)/etc/quenb/
 	cp quenb-lxde-autostart.conf $(DESTDIR)/usr/share/quenb/
+	cp quenb-client.1.gz $(DESTDIR)/usr/share/man/man1/
+
+manpage:
+	
+	@help2man ./quenb-client --no-info --name="quenb-client: Digital signage display client for Raspberry Pi (or similar systems)" | gzip -c > quenb-client.1.gz
+
+versionbump:
+	
+	@DEBFULLNAME='ECS STACS' DEBEMAIL='stacs@ecs.soton.ac.uk' dch -v $$(./quenb-client --version)
 
 package:
 
 	debuild
-
 
 
 LATEST := $(shell /bin/ls $$PWD/../quenb-client*.deb | sort -rn | head -1)
