@@ -1,3 +1,15 @@
+quenb-client (1.0.5) precise; urgency=low
+
+  * Fix MAC discovery problem where URL does not contain hostname 
+
+ -- ECS STACS <stacs@ecs.soton.ac.uk>  Tue, 02 Jul 2013 20:14:09 +0100
+
+quenb-client (1.0.4) precise; urgency=low
+
+  * Added version support and manpage 
+
+ -- ECS STACS <stacs@ecs.soton.ac.uk>  Tue, 02 Jul 2013 19:57:05 +0100
+
 quenb-client (1.0.3) precise; urgency=low
 
   * Added debconf options to auto-configure the package if possible

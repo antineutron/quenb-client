@@ -17,12 +17,15 @@ import time
 import shlex
 
 # Current QuenB client version
-__version = '1.0.4'
+__version = '1.0.5'
 
 def getMacFromURL(url):
     """
     Given the URL of the master server, gets the MAC address
     of the network interface that will be used to contact it.
+    The MAC address will be normalized to all lowercase hex
+    digits (no colons or dots).
+    If we can't find anythin useful, returns all zeroes.
     """
 
     # Parse the URL...
@@ -32,7 +35,7 @@ def getMacFromURL(url):
     scheme = parsed.scheme
     ip = None
     device = None
-    mac = None
+    mac = '000000000000'
     
     # ...retrieve the hostname and port...
     
@@ -45,25 +48,28 @@ def getMacFromURL(url):
     
     
     # Get address info for the hostname/port combo
-    info = socket.getaddrinfo(hostname, port, 0, 0, socket.SOL_TCP)
+    try:
+        info = socket.getaddrinfo(hostname, port, 0, 0, socket.SOL_TCP)
     
-    # A bit fiddly. We get one or more tuples; [0][4][0] is the IP address (v4 or v6)
-    # of the first entry, which is (should be?) the one we'll connect to
-    ip = info[0][4][0]
+        # A bit fiddly. We get one or more tuples; [0][4][0] is the IP address (v4 or v6)
+        # of the first entry, which is (should be?) the one we'll connect to
+        ip = info[0][4][0]
     
-    # Now we have the address, we can find the network interface using the ip command
-    p = subprocess.Popen(["ip", "route", "list", "match", str(ip)], stdout=subprocess.PIPE)
-    out, err = p.communicate()
+        # Now we have the address, we can find the network interface using the ip command
+        p = subprocess.Popen(["ip", "route", "list", "match", str(ip)], stdout=subprocess.PIPE)
+        out, err = p.communicate()
     
-    m = re.search(r'^.*\s+dev\s+(\S+)\s*$', out.split('\n')[0])
-    if m:
-        device = m.group(1)
+        m = re.search(r'^.*\s+dev\s+(\S+)\s*$', out.split('\n')[0])
+        if m:
+            device = m.group(1)
     
-    if device:
-        with open('/sys/class/net/%s/address' %(device)) as f:
-            mac = f.read()
-
-    return mac
+        if device:
+            with open('/sys/class/net/%s/address' %(device)) as f:
+                mac = f.read()
+    except:
+        mac = '000000000000'
+    
+    return re.sub(r'[^0-9a-z]', '', mac.lower())
 
 def runClient(browser_cmd):
     """
@@ -127,7 +133,6 @@ if args.mac:
     mac = args.mac
 else:
     mac = getMacFromURL(url)
-
 
 # Clean whitespace from the ends
 mac = mac.strip()
