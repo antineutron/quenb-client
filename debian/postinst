@@ -1,0 +1,17 @@
+#!/bin/sh -e
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+db_get quenb-client/control-server-url
+if [ ! -z "$RET" ]; then
+  quenb-client --write-config --control-url="$RET"
+fi
+
+db_get quenb-client/install-on-boot
+
+if [ "$RET" = "true" ]; then
+  quenb-client --install-on-boot;
+fi
+
+#DEBHELPER#

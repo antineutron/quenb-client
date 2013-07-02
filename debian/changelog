@@ -1,3 +1,9 @@
+quenb-client (1.0.3) precise; urgency=low
+
+  * Added debconf options to auto-configure the package if possible
+
+ -- ECS STACS <stacs@ecs.soton.ac.uk>  Tue, 02 Jul 2013 19:06:22 +0100
+
 quenb-client (1.0.2) precise; urgency=low
 
   * Added feature for configuring LXDE to autostart QuenB

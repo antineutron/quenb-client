@@ -1,0 +1,27 @@
+Template: quenb-client/control-server-url
+Type: string
+Default: "http://quenb.agnomen.org/webclient"
+_Description: QuenB control server URL:
+ Please provide the full HTTP URL of the QuenB control server
+ that this client should contact. The string __MAC__ will
+ be replaced with the MAC address of the client. It will usually
+ look like:
+ .
+ http://hostname.domain.name/webclient?mac=__MAC__
+ .
+ You can change this later by editing the config file, or by running:
+ .
+ sudo quenb-client --write-config --control-url=<URL>
+
+
+Template: quenb-client/install-on-boot
+Type: boolean
+Default: false
+_Description: Install QuenB client to run on boot?
+ QuenB can install itself to start on boot - i.e. the Raspberry Pi boots up,
+ starts LXDE, and runs a fullscreen web browser pointing at the QuenB server.
+ This will work on non-Raspberry Pi clients, but you will need to manually
+ ensure that LXDE is the default desktop environment. Your existing LXDE
+ configuration will be preserved. You can do this yourself later by running:
+ .
+ sudo quenb-client --install-on-boot
