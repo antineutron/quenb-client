@@ -7,6 +7,10 @@ clean:
 
 	@exit 0;
 
+debian/po/templates.pot: debian/templates
+
+	debconf-updatepo	
+
 install: manpage
 
 	mkdir -p $(DESTDIR)/usr/share/quenb/
@@ -26,7 +30,7 @@ versionbump:
 	
 	@DEBFULLNAME='ECS STACS' DEBEMAIL='stacs@ecs.soton.ac.uk' dch -v $$(./quenb-client --version)
 
-package:
+package: debian/po/templates.pot
 
 	debuild
 

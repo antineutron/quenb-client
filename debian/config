@@ -3,8 +3,10 @@
 # Source debconf library.
 . /usr/share/debconf/confmodule
 
-db_input medium quenb-client control-server-url || true
-db_input low quenb-client install-on-boot || true
-db_go || true
-
+# If we're being configured, get the control server URL and ask to install on boot
+#if [ "$1" = "configure" ]; then
+  db_input high quenb-client/control-server-url || true
+  db_input high quenb-client/install-on-boot || true
+  db_go
+#fi;
 

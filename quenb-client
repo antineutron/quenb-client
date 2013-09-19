@@ -25,7 +25,7 @@ def getMacFromURL(url):
     of the network interface that will be used to contact it.
     The MAC address will be normalized to all lowercase hex
     digits (no colons or dots).
-    If we can't find anythin useful, returns all zeroes.
+    If we can't find anything useful, returns all zeroes.
     """
 
     # Parse the URL...

@@ -1,6 +1,6 @@
 Template: quenb-client/control-server-url
 Type: string
-Default: "http://quenb.agnomen.org/webclient"
+Default: "http://quenb.agnomen.co.uk/webclient"
 _Description: QuenB control server URL:
  Please provide the full HTTP URL of the QuenB control server
  that this client should contact. The string __MAC__ will
