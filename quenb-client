@@ -7,7 +7,7 @@ We just need the URL of the Quenb control server to work it all out.
 """
 
 from urlparse import urlparse
-import os, errno
+import os, errno, sys
 import socket
 import subprocess
 import re
@@ -15,6 +15,7 @@ from ConfigParser import ConfigParser, NoOptionError
 import argparse
 import time
 import shlex
+import syslog
 
 # Current QuenB client version
 __version = '1.0.5'
@@ -36,6 +37,8 @@ def getMacFromURL(url):
     ip = None
     device = None
     mac = '000000000000'
+
+    syslog.syslog(syslog.LOG_INFO, 'Parsed URL {0}: hostname is {1}'.format(url, hostname))
     
     # ...retrieve the hostname and port...
     
@@ -54,6 +57,7 @@ def getMacFromURL(url):
         # A bit fiddly. We get one or more tuples; [0][4][0] is the IP address (v4 or v6)
         # of the first entry, which is (should be?) the one we'll connect to
         ip = info[0][4][0]
+        syslog.syslog(syslog.LOG_INFO, 'Got IP for {0}: {1}'.format(hostname, ip))
     
         # Now we have the address, we can find the network interface using the ip command
         p = subprocess.Popen(["ip", "route", "list", "match", str(ip)], stdout=subprocess.PIPE)
@@ -62,11 +66,14 @@ def getMacFromURL(url):
         m = re.search(r'^.*\s+dev\s+(\S+)\s*$', out.split('\n')[0])
         if m:
             device = m.group(1)
+            syslog.syslog(syslog.LOG_INFO, 'Found device I will use to talk to {0}: {1}'.format(hostname, device))
     
         if device:
             with open('/sys/class/net/%s/address' %(device)) as f:
                 mac = f.read()
+                syslog.syslog(syslog.LOG_INFO, 'Found MAC: {0}'.format(mac))
     except:
+        syslog.syslog(syslog.LOG_ERR, 'Failed to find MAC address, using 000000000000')
         mac = '000000000000'
     
     return re.sub(r'[^0-9a-z]', '', mac.lower())
@@ -74,9 +81,13 @@ def getMacFromURL(url):
 def runClient(browser_cmd):
     """
     Runs the client browser as a subprocess.
+    Returns a tuple of (start timestamp, browser process)
     """
     devnull = open(os.devnull, 'w')
-    return subprocess.Popen(shlex.split(browser_cmd), shell=False, stdout=devnull, stderr=devnull)
+    syslog.syslog(syslog.LOG_INFO, 'Starting web browser...')
+    proc = subprocess.Popen(shlex.split(browser_cmd), shell=False, stdout=devnull, stderr=devnull)
+    start_time = time.time()
+    return (start_time, proc)
 
 
 # Read command line arguments
@@ -90,6 +101,8 @@ argparser.add_argument('--mac-address', dest='mac', default=None,
                    help='MAC address to report to the server (overrides auto-discovered value)')
 argparser.add_argument('--browser-command', dest='browser_command', default=None,
                    help='Command to run a standalone web browser (__URL__ is replaced with the URL)')
+argparser.add_argument('--max-run-time', dest='max_run_time', type=int, default=60*60,
+                   help='Maximum time to allow the browser to run before forcibly restarting it')
 argparser.add_argument('--write-config', dest='write_config', action='store_true',
                    help='Just writes all options to the config file and exits, does not run the client')
 argparser.add_argument('--install-on-boot', dest='install', action='store_true',
@@ -122,6 +135,10 @@ try:
     browser = config.get('QuenbClient', 'browser-command')
 except NoOptionError: pass
 
+try:
+    max_run_time = int(config.get('QuenbClient', 'max-run-time'))
+except NoOptionError: pass
+
 # Override with command line args if specified
 if args.control_server_url:
     url = args.control_server_url
@@ -129,10 +146,14 @@ if args.control_server_url:
 if args.browser_command:
     browser = args.browser_command
 
+if args.max_run_time:
+    max_run_time = args.max_run_time
+
 if args.mac:
     mac = args.mac
 else:
     mac = getMacFromURL(url)
+
 
 # Clean whitespace from the ends
 mac = mac.strip()
@@ -169,9 +190,11 @@ if args.install:
         print "...done."
 
 elif args.write_config:
+
     # Set the config values ready to write back
     config.set('QuenbClient', 'control-server-url', url)
     config.set('QuenbClient', 'browser-command', browser)
+    config.set('QuenbClient', 'max-run-time', max_run_time)
     
     # Write config file, creating it if needed
     config_dir = os.path.abspath(os.path.dirname(args.config_file))
@@ -190,10 +213,24 @@ else:
 
     url = url.replace('__MAC__', mac)
     browser = browser.replace('__URL__', url)
+    syslog.openlog(logoption=syslog.LOG_PID, facility=syslog.LOG_DAEMON)
 
-    b = runClient(browser)
+    syslog.syslog(syslog.LOG_INFO, 'Starting QuenB client')
+    (start_time, bproc) = runClient(browser)
     while True:
-        res = b.poll()
+
+        # If the browser has run for a long time, pre-emptively kill it off
+        if time.time() - start_time > max_run_time:
+            bproc.terminate()
+            bproc.kill()
+
+        # Check running status
+        res = bproc.poll()
+
+        # Not running: start new browser
         if res is not None:
-            b = runClient(browser)
+            syslog.syslog(syslog.LOG_INFO, 'Browser died, restarting...')
+            (start_time, bproc) = runClient(browser)
+
+        # Wait between polls
         time.sleep(5)
