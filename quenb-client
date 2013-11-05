@@ -18,7 +18,7 @@ import shlex
 import syslog
 
 # Current QuenB client version
-__version = '1.0.5'
+__version = '1.0.6'
 
 def getMacFromURL(url):
     """
