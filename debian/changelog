@@ -1,3 +1,10 @@
+quenb-client (1.0.6) precise; urgency=low
+
+  * Fix problem where quenb-client is not restarted after killing it
+  * Auto-restart browser after a set amount of time
+
+ -- ECS STACS <stacs@ecs.soton.ac.uk>  Tue, 05 Nov 2013 15:42:13 +0000
+
 quenb-client (1.0.5) precise; urgency=low
 
   * Fix MAC discovery problem where URL does not contain hostname 
