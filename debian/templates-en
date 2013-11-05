@@ -10,7 +10,7 @@ _description: QuenB control server URL:
  You can change this later by editing the config file, or by running:
  .
  sudo quenb-client --write-config --control-url=<URL>
-Default: "http://quenb.agnomen.co.uk/webclient"
+Default: http://quenb.agnomen.co.uk/webclient
 Default-en: 
 Description-en: 
 
