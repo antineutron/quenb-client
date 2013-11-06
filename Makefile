@@ -32,7 +32,7 @@ versionbump:
 
 package: debian/po/templates.pot
 
-	debuild
+	debuild -k22C1139C # GPG key ID
 
 
 LATEST := $(shell /bin/ls $$PWD/../quenb-client*.deb | sort -rn | head -1)
